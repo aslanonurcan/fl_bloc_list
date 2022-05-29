@@ -1,11 +1,12 @@
 import 'dart:async';
 import 'dart:convert';
 
-import 'package:bloc/bloc.dart';
+import 'package:bloc_concurrency/bloc_concurrency.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:http/http.dart' as http;
-
+import 'package:stream_transform/stream_transform.dart';
 import '../model/post.dart';
 
 part 'post_event.dart';
@@ -15,11 +16,22 @@ typedef HttpClient = http.Client;
 
 const _postLimit = 20;
 
+const _postDuration = Duration(microseconds: 100);
+
+EventTransformer<T> postDroppable<T>(Duration duration) {
+  return (events, mapper) {
+    return droppable<T>().call(events.throttle(duration), mapper);
+  };
+}
+
 class PostBloc extends Bloc<PostEvent, PostState> {
   PostBloc({required HttpClient client})
       : _client = client,
         super(PostInitial()) {
-    on<PostFetch>(_onPostFetched);
+    on<PostFetch>(
+      _onPostFetched,
+      transformer: postDroppable(_postDuration),
+    );
   }
 
   final HttpClient _client;

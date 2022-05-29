@@ -1,8 +1,13 @@
+import 'package:bloc/bloc.dart';
 import 'package:fl_bloc_list/view/home_page.dart';
 import 'package:flutter/material.dart';
+import 'dart:developer' as devtools show log;
 
 void main() {
-  runApp(const MyApp());
+  BlocOverrides.runZoned(
+    () => runApp(const MyApp()),
+    blocObserver: PostBlocObserver(),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -20,4 +25,22 @@ class MyApp extends StatelessWidget {
       home: const HomePage(),
     );
   }
+}
+
+class PostBlocObserver extends BlocObserver {
+  @override
+  void onTransition(Bloc bloc, Transition transition) {
+    'Bloc: $bloc'.log();
+    super.onTransition(bloc, transition);
+  }
+
+  @override
+  void onCreate(BlocBase bloc) {
+    'Post Bloc Created'.log();
+    super.onCreate(bloc);
+  }
+}
+
+extension Log on Object {
+  void log() => devtools.log(toString());
 }
